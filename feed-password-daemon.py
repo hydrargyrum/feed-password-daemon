@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: WTFPL
 
 import argparse
+import os
 import signal
 import sys
 import time
@@ -24,15 +25,26 @@ def runchild(signum, frame):
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--reply-to-prompt", default="Password:")
+parser.add_argument("--password-from-env", metavar="VARIABLE")
+parser.add_argument("--password-from-file", metavar="FILE")
+parser.add_argument("--reply-to-prompt", default="Password:", metavar="PROMPT")
 parser.add_argument("command", nargs="+")
 args = parser.parse_args()
 
-password = sys.stdin.readline().strip()
+if args.password_from_env:
+	# unfortunately, pop() does not prevent the env variable from
+	# being shown in `ps e`
+	password = os.environ.pop(args.password_from_env)
+elif args.password_from_file:
+	with open(args.password_from_file) as fp:
+		password = fp.readline().rstrip()
+else:
+	password = sys.stdin.readline().rstrip()
 
 signal.signal(signal.SIGUSR1, runchild)
 # quit on SIGINT
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
 while True:
+	# keep the program running so we receive SIGUSR1
 	time.sleep(600)
