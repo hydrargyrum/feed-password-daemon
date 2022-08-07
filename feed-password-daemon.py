@@ -24,10 +24,17 @@ def runchild(signum, frame):
 	child.wait()
 
 
+def quit(*_):
+	if args.pid_file:
+		os.unlink(args.pid_file)
+	exit(130)
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("--password-from-env", metavar="VARIABLE")
 parser.add_argument("--password-from-file", metavar="FILE")
 parser.add_argument("--reply-to-prompt", default="Password:", metavar="PROMPT")
+parser.add_argument("--pid-file", metavar="FILE")
 parser.add_argument("command", nargs="+")
 args = parser.parse_args()
 
@@ -42,8 +49,11 @@ else:
 	password = sys.stdin.readline().rstrip()
 
 signal.signal(signal.SIGUSR1, runchild)
-# quit on SIGINT
-signal.signal(signal.SIGINT, signal.SIG_DFL)
+signal.signal(signal.SIGINT, quit)
+
+if args.pid_file:
+	with open(args.pid_file, "w") as fp:
+		print(os.getpid(), file=fp)
 
 while True:
 	# keep the program running so we receive SIGUSR1
