@@ -2,6 +2,7 @@
 # SPDX-License-Identifier: WTFPL
 
 import argparse
+import getpass
 import os
 import signal
 import sys
@@ -33,6 +34,7 @@ def quit(*_):
 parser = argparse.ArgumentParser()
 parser.add_argument("--password-from-env", metavar="VARIABLE")
 parser.add_argument("--password-from-file", metavar="FILE")
+parser.add_argument("--password-from-stdin", action="store_true")
 parser.add_argument("--reply-to-prompt", default="Password:", metavar="PROMPT")
 parser.add_argument("--pid-file", metavar="FILE")
 parser.add_argument("command", nargs="+")
@@ -45,8 +47,10 @@ if args.password_from_env:
 elif args.password_from_file:
 	with open(args.password_from_file) as fp:
 		password = fp.readline().rstrip()
-else:
+elif args.password_from_stdin:
 	password = sys.stdin.readline().rstrip()
+else:
+	password = getpass.getpass()
 
 signal.signal(signal.SIGUSR1, runchild)
 signal.signal(signal.SIGINT, quit)

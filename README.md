@@ -2,7 +2,7 @@
 
 When run, feed-password-daemon:
 - takes as arguments: a command that will be wrapped and its arguments
-- takes a password on stdin and caches it
+- takes a password on TTY and caches it
 - run this forever:
     - waits for SIGUSR1 to be received
     - when SIGUSR1 is received, it runs the wrapped command
@@ -19,3 +19,15 @@ However:
 
 This is where feed-password-daemon helps: it will cache the CalDAV password and wrap vdirsyncer to run it when desired and feeds it the password, without asking it again, à la Thunderbird.
 
+## Options
+
+By default the initial password is read from the TTY.
+
+- `--password-from-env=VARIABLE`: read password from environment VARIABLE instead of TTY
+- `--password-from-file=FILE`: read password from FILE instead of TTY
+- `--password-from-stdin`: read password from stdin instead of TTY
+
+Other:
+
+- `--reply-to-prompt=PROMPT`: feed password when PROMPT is found
+- `--pid-file=FILE`: write pid of daemon to FILE
