@@ -4,6 +4,7 @@
 import argparse
 import getpass
 import os
+import shlex
 import signal
 import sys
 import time
@@ -50,7 +51,7 @@ elif args.password_from_file:
 elif args.password_from_stdin:
 	password = sys.stdin.readline().rstrip()
 else:
-	password = getpass.getpass()
+	password = getpass.getpass(f"Password to feed to {shlex.join(args.command)!r}: ")
 
 signal.signal(signal.SIGUSR1, runchild)
 signal.signal(signal.SIGINT, quit)
