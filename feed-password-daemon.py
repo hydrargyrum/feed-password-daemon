@@ -13,6 +13,8 @@ import pexpect
 
 
 def runchild(signum, frame):
+	print(f"will spawn {shlex.join(args.command)!r}", file=sys.stderr)
+
 	child = pexpect.spawn(
 		args.command[0], args.command[1:],
 		encoding="utf8",
