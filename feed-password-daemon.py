@@ -55,6 +55,10 @@ parser.add_argument(
 	"--confirm-password", action="store_true",
 	help="Prompt the password twice to make sure it's correct",
 )
+parser.add_argument(
+	"--check-at-start", action="store_true",
+	help="Run COMMAND immediately to check the password is correct",
+)
 parser.add_argument("command", nargs="+")
 args = parser.parse_args()
 
@@ -82,6 +86,9 @@ if args.pid_file:
 		print(os.getpid(), file=fp)
 
 atexit.register(on_exit)
+
+if args.check_at_start:
+	runchild(None, None)
 
 while True:
 	# keep the program running so we receive SIGUSR1
