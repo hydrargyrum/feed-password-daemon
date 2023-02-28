@@ -51,6 +51,10 @@ parser.add_argument("--password-from-file", metavar="FILE")
 parser.add_argument("--password-from-stdin", action="store_true")
 parser.add_argument("--reply-to-prompt", default="Password:", metavar="PROMPT")
 parser.add_argument("--pid-file", metavar="FILE")
+parser.add_argument(
+	"--confirm-password", action="store_true",
+	help="Prompt the password twice to make sure it's correct",
+)
 parser.add_argument("command", nargs="+")
 args = parser.parse_args()
 
@@ -65,6 +69,10 @@ elif args.password_from_stdin:
 	password = sys.stdin.readline().rstrip()
 else:
 	password = getpass.getpass(f"Password to feed to {shlex.join(args.command)!r}: ")
+	if args.confirm_password:
+		password2 = getpass.getpass("Confirm password: ")
+		if password != password2:
+			sys.exit("error: passwords are different, exiting")
 
 signal.signal(signal.SIGUSR1, runchild)
 signal.signal(signal.SIGINT, quit)
