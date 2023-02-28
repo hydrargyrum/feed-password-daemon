@@ -2,6 +2,8 @@
 # SPDX-License-Identifier: WTFPL
 
 import argparse
+import atexit
+import datetime
 import getpass
 import os
 import shlex
@@ -12,8 +14,16 @@ import time
 import pexpect
 
 
+def now():
+	return datetime.datetime.now()
+
+
+def on_exit():
+	print(f"{now()}: exiting", file=sys.stderr)
+
+
 def runchild(signum, frame):
-	print(f"will spawn {shlex.join(args.command)!r}", file=sys.stderr)
+	print(f"{now()}: will spawn {shlex.join(args.command)!r}", file=sys.stderr)
 
 	child = pexpect.spawn(
 		args.command[0], args.command[1:],
@@ -26,6 +36,7 @@ def runchild(signum, frame):
 
 	child.expect(pexpect.EOF)
 	child.wait()
+	print(f"{now()}: child process exited", file=sys.stderr)
 
 
 def quit(*_):
@@ -61,6 +72,8 @@ signal.signal(signal.SIGINT, quit)
 if args.pid_file:
 	with open(args.pid_file, "w") as fp:
 		print(os.getpid(), file=fp)
+
+atexit.register(on_exit)
 
 while True:
 	# keep the program running so we receive SIGUSR1
