@@ -45,19 +45,48 @@ def quit(*_):
 	exit(130)
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument("--password-from-env", metavar="VARIABLE")
-parser.add_argument("--password-from-file", metavar="FILE")
-parser.add_argument("--password-from-stdin", action="store_true")
-parser.add_argument("--reply-to-prompt", default="Password:", metavar="PROMPT")
-parser.add_argument("--pid-file", metavar="FILE")
-parser.add_argument(
+parser = argparse.ArgumentParser(
+	description="""
+	Prompt for a password and caches it, then idles.
+	Runs COMMAND when SIGUSR1 is received, giving the password to COMMAND.
+
+	For example can be used to prompt a password once, and periodically
+	give the cached password to a short-lived program that requires it but
+	won't cache it between runs.
+
+	By default, the password is prompted on the TTY.
+	""",
+)
+
+group = parser.add_mutually_exclusive_group()
+group.add_argument(
+	"--password-from-env", metavar="VARIABLE",
+	help="Read initial password from environment VARIABLE instead of prompting it",
+)
+group.add_argument(
+	"--password-from-file", metavar="FILE",
+	help="Read initial password from FILE",
+)
+group.add_argument(
+	"--password-from-stdin", action="store_true",
+	help="Read initial password on standard input instead of from TTY",
+)
+group.add_argument(
 	"--confirm-password", action="store_true",
-	help="Prompt the password twice to make sure it's correct",
+	help="Prompt the password twice (on TTY) to make sure it's not mistyped",
+)
+
+parser.add_argument(
+	"--reply-to-prompt", default="Password:", metavar="PROMPT",
+	help="Give password to COMMAND when COMMAND outputs PROMPT",
+)
+parser.add_argument(
+	"--pid-file", metavar="FILE",
+	help="Write PID of feed-password-daemon to FILE",
 )
 parser.add_argument(
 	"--check-at-start", action="store_true",
-	help="Run COMMAND immediately to check the password is correct",
+	help="Run COMMAND immediately to check the password is correct at start",
 )
 parser.add_argument("command", nargs="+")
 args = parser.parse_args()
