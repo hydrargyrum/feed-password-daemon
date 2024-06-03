@@ -31,6 +31,7 @@ def runchild(signum, frame):
 
 	child = pexpect.spawn(
 		args.command[0], args.command[1:],
+		timeout=args.timeout,
 		encoding="utf8",
 	)
 	child.logfile_read = sys.stdout
@@ -91,6 +92,11 @@ parser.add_argument(
 parser.add_argument(
 	"--check-at-start", action="store_true",
 	help="Run COMMAND immediately to check the password is correct at start",
+)
+parser.add_argument(
+	"--timeout", type=int, default=None,
+	help="Wait at max TIMEOUT seconds for the prompt or the command to exit."
+	+ " Default: wait indefinitely.",
 )
 parser.add_argument("command", nargs="+")
 args = parser.parse_args()
