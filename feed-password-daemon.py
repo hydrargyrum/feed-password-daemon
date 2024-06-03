@@ -39,8 +39,8 @@ def runchild(signum, frame):
 	child.sendline(password)
 
 	child.expect(pexpect.EOF)
-	child.wait()
-	print(f"{now()}: child process exited", file=sys.stderr)
+	status = child.wait()
+	print(f"{now()}: child process exited with code {status}", file=sys.stderr)
 
 
 def quit(*_):
