@@ -19,6 +19,9 @@ import time
 import pexpect
 
 
+__version__ = "0.9.0"
+
+
 def on_exit():
 	logging.info("exiting")
 
@@ -104,6 +107,7 @@ parser.add_argument(
 	help="Keep feed-password-daemon (not the wrapped command) in RAM, so "
 	+ "the password cannot get accidentaly stored into swap",
 )
+parser.add_argument("--version", action="version", version=__version__)
 parser.add_argument("command", nargs="+")
 args = parser.parse_args()
 
