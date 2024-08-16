@@ -36,3 +36,4 @@ Other:
 - `--reply-to-prompt=PROMPT`: feed password when PROMPT is found (this is used to detect when the wrapped command requires a password)
 - `--pid-file=FILE`: write pid of daemon to FILE
 - `--check-at-start`: run the wrapped command a first time when `feed-password-daemon` is started, as if `SIGUSR1` was received, useful to verify the password validity as quickly as possible
+- `--mlock`: keep the daemon (not the wrapped command) in RAM and prevent the cached password to end up accidentally in swap

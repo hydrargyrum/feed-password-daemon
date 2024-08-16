@@ -7,6 +7,7 @@
 
 import argparse
 import atexit
+import ctypes
 import datetime
 import getpass
 import os
@@ -98,6 +99,11 @@ parser.add_argument(
 	help="Wait at max TIMEOUT seconds for the prompt or the command to exit."
 	+ " Default: wait indefinitely.",
 )
+parser.add_argument(
+	"--mlock", action="store_true",
+	help="Keep feed-password-daemon (not the wrapped command) in RAM, so "
+	+ "the password cannot get accidentaly stored into swap",
+)
 parser.add_argument("command", nargs="+")
 args = parser.parse_args()
 
@@ -119,6 +125,10 @@ else:
 
 signal.signal(signal.SIGUSR1, runchild)
 signal.signal(signal.SIGINT, quit)
+
+if args.mlock:
+	libc = ctypes.CDLL("libc.so.6")
+	libc.mlockall(3)  # MCL_CURRENT | MCL_FUTURE
 
 if args.pid_file:
 	with open(args.pid_file, "w") as fp:
