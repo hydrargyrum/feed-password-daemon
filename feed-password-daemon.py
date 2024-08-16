@@ -8,8 +8,8 @@
 import argparse
 import atexit
 import ctypes
-import datetime
 import getpass
+import logging
 import os
 import shlex
 import signal
@@ -19,16 +19,12 @@ import time
 import pexpect
 
 
-def now():
-	return datetime.datetime.now()
-
-
 def on_exit():
-	print(f"{now()}: exiting", file=sys.stderr)
+	logging.info("exiting")
 
 
 def runchild(signum, frame):
-	print(f"{now()}: will spawn {shlex.join(args.command)!r}", file=sys.stderr)
+	logging.info("will spawn: %r", shlex.join(args.command))
 
 	child = pexpect.spawn(
 		args.command[0], args.command[1:],
@@ -42,7 +38,7 @@ def runchild(signum, frame):
 
 	child.expect(pexpect.EOF)
 	status = child.wait()
-	print(f"{now()}: child process exited with code {status}", file=sys.stderr)
+	logging.info("child process exited with code %s", status)
 
 
 def quit(*_):
@@ -50,6 +46,10 @@ def quit(*_):
 		os.unlink(args.pid_file)
 	exit(130)
 
+
+logging.basicConfig(
+	level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
+)
 
 parser = argparse.ArgumentParser(
 	description="""
