@@ -18,6 +18,9 @@ However:
 
 - being a GUI app, Thunderbird stays open, reads the password at start and caches it in RAM, so it can use the password when needed, without asking it again
 - being a command-line, non-TUI app, vdirsyncer has no means to cache the password and is forced to ask it at every sync (possibly delegating to [pass](https://www.passwordstore.org), but the problem still stands)
+    - it prevents from syncing when the user is away from keyboard
+    - having to enter the password very often is annoying
+    - with `pass`'s pinentry GUI, it might train the user to enter their password without knowing which app is asking for it, which is a sloppy habit
 
 This is where `feed-password-daemon` helps: it will cache the CalDAV password and wrap vdirsyncer to run it when desired and feeds it the password, without asking it again, à la Thunderbird.
 `SIGUSR1` can then be sent on-demand to `feed-password-daemon` or periodically.
