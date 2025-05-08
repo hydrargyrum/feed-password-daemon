@@ -11,10 +11,10 @@ import ctypes
 import getpass
 import logging
 import os
+import queue
 import shlex
 import signal
 import sys
-import time
 
 import pexpect
 
@@ -26,7 +26,7 @@ def on_exit():
 	logging.info("exiting")
 
 
-def runchild(signum, frame):
+def runchild():
 	logging.info("will spawn: %r", shlex.join(args.command))
 
 	child = pexpect.spawn(
@@ -44,13 +44,13 @@ def runchild(signum, frame):
 	logging.info("child process exited with code %s", status)
 
 
-def quit(*_):
+def quit():
 	if args.pid_file:
 		os.unlink(args.pid_file)
 	exit(130)
 
 
-def restart(*_):
+def restart():
 	# we restart the daemon by replacing current process with an exec with
 	# roughly the same args.
 	new_args = [sys.executable, __file__]
@@ -186,9 +186,11 @@ else:
 		if password != password2:
 			sys.exit("error: passwords are different, exiting")
 
-signal.signal(signal.SIGHUP, restart)
-signal.signal(signal.SIGUSR1, runchild)
-signal.signal(signal.SIGINT, quit)
+signal_queue = queue.SimpleQueue()
+
+signal.signal(signal.SIGHUP, lambda *_: signal_queue.put(restart))
+signal.signal(signal.SIGUSR1, lambda *_: signal_queue.put(runchild))
+signal.signal(signal.SIGINT, lambda *_: signal_queue.put(quit))
 
 if args.mlock:
 	libc = ctypes.CDLL("libc.so.6")
@@ -205,4 +207,5 @@ if args.check_at_start:
 
 while True:
 	# keep the program running so we receive SIGUSR1
-	time.sleep(600)
+	func = signal_queue.get()
+	func()
