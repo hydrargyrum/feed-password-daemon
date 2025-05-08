@@ -19,7 +19,7 @@ import time
 import pexpect
 
 
-__version__ = "0.9.0"
+__version__ = "0.10.0"
 
 
 def on_exit():
@@ -48,6 +48,65 @@ def quit(*_):
 	if args.pid_file:
 		os.unlink(args.pid_file)
 	exit(130)
+
+
+def restart(*_):
+	# we restart the daemon by replacing current process with an exec with
+	# roughly the same args.
+	new_args = [sys.executable, __file__]
+
+	mappings = [
+		(args.reply_to_prompt, "--reply-to-prompt"),
+		(args.pid_file, "--pid-file"),
+		(args.timeout, "--timeout"),
+		(args.password_from_env, "--password-from-env"),
+	]
+	for value, key in mappings:
+		if value:
+			new_args.append(f"{key}={value}")
+	if args.check_at_start:
+		new_args.append("--check-at-start")
+	if args.mlock:
+		new_args.append("--mlock")
+
+	# if password was in env variable, it can be read again.
+	# but if it's from somewhere else, it probably can't be read again from
+	# the same source, for example if it was prompted, but we don't want to
+	# prompt it again!
+	# so we'll write it on the stdin of the new process.
+	if not args.password_from_env:
+		new_args.append("--password-from-stdin")
+
+	new_args.append("--")
+	new_args.extend(args.command)
+
+	if args.password_from_env:
+		new_env = {
+			**os.environ,
+			# restore it as we pop'ed it earlier
+			args.password_from_env: password,
+		}
+		logging.info("reloading by execing %r", new_args)
+		os.execvpe(sys.executable, new_args, new_env)
+
+	pipe_read, pipe_write = os.pipe2(0)
+
+	pid = os.fork()
+	if not pid:
+		# the child process has the password too, it'll write it on
+		# the its parent's stdin. its parent is expected to be a freshly
+		# re-run process.
+		os.close(pipe_read)
+		encoded = f"{password}\n".encode()
+		if os.write(pipe_write, encoded) != len(encoded):
+			logging.error("could not write password for reloading process")
+		os.close(pipe_write)
+		os._exit(0)
+	else:
+		os.close(pipe_write)
+		os.dup2(pipe_read, 0)
+		logging.info("reloading by execing %r", new_args)
+		os.execvp(sys.executable, new_args)
 
 
 logging.basicConfig(
@@ -127,6 +186,7 @@ else:
 		if password != password2:
 			sys.exit("error: passwords are different, exiting")
 
+signal.signal(signal.SIGHUP, restart)
 signal.signal(signal.SIGUSR1, runchild)
 signal.signal(signal.SIGINT, quit)
 
