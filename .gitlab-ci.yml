@@ -16,3 +16,9 @@ lint:
     script:
         - "pip install flake8"
         - "flake8 --max-line-length=120 --ignore=W191,W503 ."
+
+test:
+    stage: "test"
+    script:
+        - "pip install pytest pexpect"
+        - "pytest ."
