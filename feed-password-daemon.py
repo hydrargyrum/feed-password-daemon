@@ -203,7 +203,7 @@ if args.pid_file:
 atexit.register(on_exit)
 
 if args.check_at_start:
-	runchild(None, None)
+	runchild()
 
 while True:
 	# keep the program running so we receive SIGUSR1
